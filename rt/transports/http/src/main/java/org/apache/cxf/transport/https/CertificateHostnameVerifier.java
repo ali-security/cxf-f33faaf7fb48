@@ -176,6 +176,10 @@ public interface CertificateHostnameVerifier extends javax.net.ssl.HostnameVerif
                 // Allow everything - so never blowup.
             }
 
+            public final boolean verify(final String host, final String certHostname) {
+                return certHostname != null && !certHostname.isEmpty();
+            }
+
             public final String toString() {
                 return "ALLOW_ALL";
             }
@@ -257,6 +261,23 @@ public interface CertificateHostnameVerifier extends javax.net.ssl.HostnameVerif
                 Certificate[] certs = session.getPeerCertificates();
                 X509Certificate x509 = (X509Certificate) certs[0];
                 check(new String[]{host}, x509);
+                return true;
+            } catch (SSLException e) {
+                return false;
+            }
+        }
+
+        /**
+         * The com.sun.net.ssl.HostnameVerifier contract, used when the deprecated
+         * "com.sun.net.ssl.internal.www.protocol" handler is in use.
+         *
+         * @param host         'hostname' we used to create our socket
+         * @param certHostname hostname (CN) taken from the server's certificate
+         * @return true if the host matched the one in the certificate.
+         */
+        public boolean verify(final String host, final String certHostname) {
+            try {
+                check(new String[] {host}, new String[] {certHostname}, new String[] {});
                 return true;
             } catch (SSLException e) {
                 return false;
