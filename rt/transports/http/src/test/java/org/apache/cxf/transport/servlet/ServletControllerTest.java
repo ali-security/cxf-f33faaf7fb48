@@ -126,6 +126,33 @@ public class ServletControllerTest extends Assert {
     }
     
     @Test
+    public void testGenerateServiceListingWithMatrixParams() throws Exception {
+        req.getPathInfo();
+        EasyMock.expectLastCall().andReturn("/").anyTimes();
+        req.getContextPath();
+        EasyMock.expectLastCall().andReturn("").anyTimes();
+        req.getServletPath();
+        EasyMock.expectLastCall().andReturn("/the").anyTimes();
+        req.getRequestURI();
+        EasyMock.expectLastCall().andReturn("/the/;a=b").anyTimes();
+        req.getRequestURL();
+        EasyMock.expectLastCall().andReturn(new StringBuffer("http://localhost:8080/the/;a=b")).anyTimes();
+        // the matrix parameters must not find their way into the base address
+        req.setAttribute(Message.BASE_PATH, "http://localhost:8080/the");
+        EasyMock.expectLastCall().once();
+        registry.getDestinationForPath("/", true);
+        EasyMock.expectLastCall().andReturn(null).anyTimes();
+
+        expectServiceListGeneratorCalled();
+        EasyMock.replay(req, registry, serviceListGenerator);
+
+        TestServletController sc = new TestServletController(registry, serviceListGenerator);
+        sc.invoke(req, res);
+        EasyMock.verify(req, serviceListGenerator);
+        assertFalse(sc.invokeDestinationCalled());
+    }
+
+    @Test
     public void testHideServiceListing() throws Exception {
         req.getPathInfo();
         EasyMock.expectLastCall().andReturn(null);

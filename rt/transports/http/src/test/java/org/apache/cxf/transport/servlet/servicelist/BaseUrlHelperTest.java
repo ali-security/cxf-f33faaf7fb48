@@ -112,4 +112,43 @@ public class BaseUrlHelperTest {
         Assert.assertEquals("http://localhost:8080/services", url);
 
     }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnly() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/the", "", "/the", null);
+        Assert.assertEquals("http://localhost:8080/the", url);
+    }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnlyTrailingSlash() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/the/", "", "/the", "/");
+        Assert.assertEquals("http://localhost:8080/the/", url);
+    }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnlyMatrixParam() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/the/;a=b", "", "/the", "/");
+        Assert.assertEquals("http://localhost:8080/the", url);
+    }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnlyMatrixParam2() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/services;a=b;/list;a=b/;a=b", "",
+                                    "/services/list", "/");
+        Assert.assertEquals("http://localhost:8080/services/list", url);
+    }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnlyMatrixParamWithContext() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/ctx/the/;a=b;c=d", "/ctx", "/the", "/");
+        Assert.assertEquals("http://localhost:8080/ctx/the", url);
+    }
+
+    @Test
+    public void testGetRequestURLServletPatternMatchOnlyInjectedMatrixParam() throws Exception {
+        String url = testGetBaseURL("http://localhost:8080/the/"
+                                    + ";a=%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E",
+                                    "", "/the", "/");
+        Assert.assertEquals("http://localhost:8080/the", url);
+    }
 }
