@@ -110,6 +110,35 @@ public class ServiceListGeneratorServletTest extends Assert {
         assertFalse(s.contains(";a="));
     }
 
+    @Test
+    public void testStyleSheetPathIsEscaped() throws Exception {
+        // the container decodes the path info, while the request URI stays encoded
+        String s = getServiceListPage("/the/services/%22%3E%3Cscript%3Ealert(1)%3C/script%3E/services", "",
+                                      "/the", "/services/\"><script>alert(1)</script>/services", null);
+        assertFalse(s.contains("<script>"));
+        assertTrue(s.contains("href=\"/the/services/&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"
+                              + "/services/?stylesheet=1\""));
+        assertTrue(s.contains("cellpadding=\"1\""));
+        assertTrue(s.contains("<a href=\"" + HOST + "/the/bookstore?_wadl\""));
+    }
+
+    @Test
+    public void testEndpointAddressIsEscaped() throws Exception {
+        // dot segments are not normalized by every client, so the raw request URL may carry markup
+        String s = getServiceListPage("/<script>alert(1)</script>/../the/", "", "/the", "/", null);
+        assertFalse(s.contains("<script>"));
+        assertTrue(s.contains("href=\"/the/?stylesheet=1\""));
+        assertTrue(s.contains("<a href=\"" + HOST
+                              + "/&lt;script&gt;alert(1)&lt;/script&gt;/../the/bookstore?_wadl\""));
+    }
+
+    @Test
+    public void testUnformattedEndpointAddressIsEscaped() throws Exception {
+        String s = getServiceListPage("/<script>alert(1)</script>/../the/", "", "/the", "/", "false");
+        assertFalse(s.contains("<script>"));
+        assertTrue(s.contains(HOST + "/&lt;script&gt;alert(1)&lt;/script&gt;/../the/"));
+    }
+
     private String getServiceListPage(String requestUri, String contextPath, String servletPath,
                                       String pathInfo, String formatted) throws Exception {
         HttpServletRequest req = createRequest(requestUri, contextPath, servletPath, pathInfo, formatted);
